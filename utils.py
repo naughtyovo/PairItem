@@ -3,37 +3,41 @@ from fractions import Fraction
 
 def fraction_to_mixed(frac: Fraction) -> str:
     """
-    将分数转换为带分数的字符串形式。
-    :param frac: Fraction 对象，表示要转换的分数。
-    :return: 返回带分数形式的字符串。如果分子小于等于分母，或是整数（分母为 1），则直接返回其字符串形式。
-    """
-    # 如果分子小于等于分母，或者分母为 1，表示这是一个小于 1 的分数或整数，直接返回其字符串表示
-    if frac.numerator <= frac.denominator or frac.denominator == 1:
-        return str(frac)
+    将 Fraction 对象转换为带分数的字符串表示形式。
 
-    # 否则，将其转换为带分数形式。计算整数部分 (frac.numerator // frac.denominator)
-    # 然后将剩余的分数部分 (frac - frac.numerator // frac.denominator) 组合成字符串返回
-    result = f"{frac.numerator // frac.denominator}'{frac - (frac.numerator // frac.denominator)}"
-    return result
+    :param frac: 需要转换的 Fraction 对象，表示分数。
+    :return: 分数的字符串表示形式，如果是假分数，返回带分数格式，否则返回分数的原始字符串。
+
+    - 如果分数的分子（numerator）小于或等于分母（denominator），或分母为 1，则直接返回该分数的字符串表示。
+    - 如果是假分数（分子大于分母），则返回带分数的格式：
+      例如，对于 7/3，返回 "2'1/3"，即带分数形式：整数部分'分数部分。
+    """
+    # 如果分子小于等于分母，或分母为1，返回分数原始形式
+    if frac.numerator <= frac.denominator or frac.denominator == 1:
+        return str(frac)  # 直接返回 Fraction 的字符串表示
+
+    # 对于假分数，返回带分数形式
+    # 整数部分: frac.numerator // frac.denominator，余数部分为 frac - (整数部分)
+    else:
+        return f"{frac.numerator // frac.denominator}'{frac - frac.numerator // frac.denominator}"
 
 
 def mixed_to_fraction(string: str) -> Fraction:
     """
-    将带分数的字符串形式转换为 Fraction 对象。
-    :param string: 带分数形式的字符串，例如 "3'1/2" 或 "1/2"。
-    :return: 返回 Fraction 对象，表示字符串形式的分数。
-    """
-    # 如果字符串包含 "/" 和 "'"，则表示这是带分数的格式
-    if '/' in string and "'" in string:
-        # 使用 "'" 将整数部分与分数部分分开
-        div = string.split("'")
-        div1 = div[0]  # 获取整数部分
-        # 使用 "/" 将分数部分的分子和分母分开
-        div = div[1].split("/")
-        div2 = div[0]  # 获取分子
-        div3 = div[1]  # 获取分母
-        # 返回整数部分与分数部分相加的 Fraction 对象
-        return int(div1) + Fraction(f"{div2}/{div3}")
+    将带分数的字符串表示转换为 Fraction 对象。
 
-    # 如果字符串是简单的分数或整数，直接将其转换为 Fraction 对象
+    :param string: 带分数的字符串，例如 "2'1/3" 或简单的 "3/4"。
+    :return: 对应的 Fraction 对象。
+
+    - 如果字符串包含带分数形式（即包含 "'" 和 "/"），将其分为整数部分和分数部分，并组合成一个 Fraction 对象。
+    - 如果是普通分数，直接将其转换为 Fraction 对象。
+    """
+    # 如果字符串包含带分数的表示形式（即同时包含 "'" 和 "/"）
+    if "'" in string and '/' in string:
+        whole, frac_part = string.split("'")  # 将字符串分为整数部分和分数部分
+        numerator, denominator = map(int, frac_part.split("/"))  # 将分数部分解析为分子和分母
+        # 返回整数部分 + 分数部分组成的 Fraction 对象
+        return int(whole) + Fraction(numerator, denominator)
+
+    # 如果字符串表示的是简单的分数形式，则直接转换为 Fraction 对象
     return Fraction(string)

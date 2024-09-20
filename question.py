@@ -3,120 +3,103 @@ from random import Random
 
 
 class Question:
-    # 运算符列表，包含加、减、乘、除四种运算
+    # 可用的运算符列表
     operators = ['+', '-', '*', '/']
 
     def __init__(self, total=0, symbols=None, bracket=-2, rational_numbers=None, string_ver=""):
-        # 初始化函数，设置类的属性，默认值为0或空列表
-        if symbols is None:
-            symbols = []  # 用于存储运算符
-        if rational_numbers is None:
-            rational_numbers = []  # 用于存储有理数
-        self.total = total  # 表示题目中操作数的数量
-        self.symbols = symbols  # 用于存储运算符列表
-        self.bracket = bracket  # 表示括号位置，-2 表示无括号
-        self.rational_numbers = rational_numbers  # 用于存储生成的操作数（包括整数和分数）
-        self.string_ver = string_ver  # 表示题目的字符串形式
-        self.result = -1  # 用于存储最终计算的结果
-        self.ran = Random()  # 用于生成随机数
-
-    def generate_question(self, maxium, num=4):
         """
-        生成一道数学题。包括生成运算符、操作数、括号、以及字符串形式的题目。
-        还会计算题目的最终结果，确保其为正数。
-        :param maxium: 题目中操作数的最大值
-        :param num: 操作数的最大数量
+        初始化 Question 类实例，定义表达式的相关属性。
+
+        :param total: 操作数的数量，默认值为 0。
+        :param symbols: 运算符列表，默认值为空列表。
+        :param bracket: 括号的位置，默认值为 -2 表示没有括号。
+        :param rational_numbers: 操作数的列表，包含整数或分数，默认值为空列表。
+        :param string_ver: 数学表达式的字符串形式，默认值为空字符串。
         """
-        # 随机选择操作数的数量（至少为2个）
-        total = self.ran.randint(2, num)
-        self.total = total
+        self.total = total or 0  # 操作数数量，默认为 0
+        self.symbols = symbols or []  # 运算符列表，默认为空
+        self.bracket = bracket  # 括号位置，默认为 -2，表示无括号
+        self.rational_numbers = rational_numbers or []  # 操作数列表（整数或分数）
+        self.string_ver = string_ver  # 数学表达式的字符串形式
+        self.result = -1  # 表达式结果，默认为 -1 表示未计算
+        self.ran = Random()  # 随机数生成器
 
-        # 生成运算符
-        self.generate_symbols(total)
-
-        # 生成括号的位置（如果有）
-        self.generate_bracket(total, self.symbols)
-
-        # 生成操作数（包括整数和分数）
-        self.generate_rational_numbers(total, maxium, self.symbols)
-
-        # 将生成的题目转换为字符串形式
-        self.generate_string()
-
-        # 计算题目的结果，并将其限制为有理数形式
-        result = Fraction(eval(self.string_ver)).limit_denominator(1024)
-
-        # 确保结果大于0
-        if result <= 0:
-            raise ValueError  # 如果结果不为正，抛出异常
-        self.result = result  # 存储计算结果
-
-    def generate_symbols(self, total):
+    def generate_question(self, max_value, num=4):
         """
-        生成 total-1 个运算符，并存储到 symbols 列表中。
-        :param total: 操作数的数量
-        """
-        # 随机选择运算符并存入 symbols 列表
-        self.symbols = [self.ran.choice(self.operators) for _ in range(total - 1)]
+        生成一个数学表达式问题，包括随机生成的操作数和运算符。
 
-    def generate_bracket(self, total, symbols):
+        :param max_value: 操作数的最大值。
+        :param num: 操作数的最大数量，默认值为 4。
         """
-        根据运算符的位置，决定是否添加括号，并确定括号的位置。
-        :param total: 操作数的数量
-        :param symbols: 生成的运算符列表
+        self.total = self.ran.randint(2, num)  # 随机生成操作数的数量，最少 2 个
+        self.generate_symbols()  # 生成运算符
+        self.generate_bracket()  # 生成括号
+        self.generate_rational_numbers(max_value)  # 生成操作数
+        self.generate_string()  # 生成表达式的字符串形式
+        self.result = self.calculate_result()  # 计算表达式结果
+
+    def generate_symbols(self):
         """
-        # 初始化括号位置为 -2，表示无括号
-        self.bracket = -2
-
-        # 当运算符数量不止一个时，可能会添加括号
-        if len(symbols) != 1:
-            for i in range(total - 1):
-                # 如果当前运算符为加法或减法，且随机选择为 True，则添加括号
-                if symbols[i] in ['+', '-'] and self.ran.choice([True, False]):
-                    self.bracket = i
-                    break
-
-    def generate_rational_numbers(self, total, maxium, symbols):
+        随机生成运算符。
+        根据操作数数量，从操作符列表中随机选择运算符。
         """
-        生成 total 个操作数，可能是整数或分数。
-        :param total: 操作数的数量
-        :param maxium: 操作数的最大值
-        :param symbols: 运算符列表，用于在生成减法时检查操作数
+        self.symbols = [self.ran.choice(self.operators) for _ in range(self.total - 1)]
+
+    def generate_bracket(self):
         """
-        self.rational_numbers = []
+        随机决定是否添加括号，并确定括号位置。
+        如果操作符数量大于1，且是加法或减法运算，随机添加括号。
+        """
+        if len(self.symbols) > 1:
+            # 当符号是加法或减法时，有一定几率在符号位置插入括号
+            self.bracket = next(
+                (i for i in range(self.total - 1) if self.symbols[i] in ['+', '-'] and self.ran.choice([True, False])),
+                -2)
 
-        for i in range(total):
-            # 随机选择生成整数或分数
-            if self.ran.choice([True, False]):
-                # 生成整数
-                self.rational_numbers.append(self.ran.randint(1, maxium))
-            else:
-                # 生成分数，分母范围为 2 到 maxium 之间的随机数，分子小于分母
-                denominator = self.ran.randint(2, maxium)
-                numerator = self.ran.randint(1, denominator - 1)
-                self.rational_numbers.append(Fraction(numerator=numerator, denominator=denominator))
+    def generate_rational_numbers(self, max_value):
+        """
+        生成操作数，随机决定每个操作数是整数或分数。
 
-            # 如果前一个运算符是减法，并且操作数的结果为负数，则抛出异常
-            if i > 0 and symbols[i - 1] == '-' and self.rational_numbers[i - 1] - self.rational_numbers[i] <= 0:
-                raise ValueError
+        :param max_value: 操作数的最大值。
+        """
+        self.rational_numbers = [
+            # 随机决定操作数是整数还是分数
+            self.ran.randint(1, max_value) if self.ran.choice([True, False])
+            else Fraction(self.ran.randint(1, self.ran.randint(2, max_value) - 1), self.ran.randint(2, max_value))
+            for _ in range(self.total)
+        ]
+        self.validate_rational_numbers()  # 验证生成的操作数是否有效
+
+    def validate_rational_numbers(self):
+        """
+        验证操作数的有效性，确保减法运算不会导致非正数。
+        如果操作数导致结果为负数或零，抛出异常。
+        """
+        for i in range(1, self.total):
+            # 如果符号是减法，且前后两个操作数相减结果为 0 或负数，则抛出异常
+            if self.symbols[i - 1] == '-' and self.rational_numbers[i - 1] - self.rational_numbers[i] <= 0:
+                raise ValueError  # 抛出异常以重新生成问题
 
     def generate_string(self):
         """
         根据生成的操作数和运算符，构建数学表达式的字符串形式。
         """
-        string_ver = ""
+        string_ver = ""  # 初始化空字符串，用于存储表达式
 
         # 遍历操作数和运算符，构建表达式字符串
         for i in range(self.total - 1):
             if self.bracket == i:
                 string_ver += '('  # 如果当前索引等于括号位置，添加左括号
+
             # 如果当前操作数是分数，将其包裹在括号中
             if isinstance(self.rational_numbers[i], Fraction):
                 string_ver += '(' + str(self.rational_numbers[i]) + ')'
             else:
                 string_ver += str(self.rational_numbers[i])  # 否则直接添加整数
+
             if self.bracket + 1 == i:
                 string_ver += ')'  # 添加右括号
+
             string_ver += self.symbols[i]  # 添加运算符
 
         # 添加最后一个操作数
@@ -131,3 +114,19 @@ class Question:
 
         # 将生成的表达式存储为字符串形式
         self.string_ver = string_ver
+
+    def calculate_result(self):
+        """
+        计算表达式的结果，并确保结果是正数。
+
+        :return: 计算后的表达式结果，使用 Fraction 确保分数表示。
+        """
+        # 使用 eval 函数计算字符串形式的表达式结果，并将其转换为 Fraction 类型
+        result = Fraction(eval(self.string_ver)).limit_denominator(1024)
+
+        # 确保结果大于0
+        if result <= 0:
+            raise ValueError  # 如果结果不为正，抛出异常
+
+        self.result = result  # 存储计算结果
+        return result  # 返回结果
