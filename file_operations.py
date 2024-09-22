@@ -1,7 +1,8 @@
 from fractions import Fraction
 from question import Question
 from utils import fraction_to_mixed, mixed_to_fraction
-
+import sys
+import time
 
 def answer_questions(r, n, answer_mode=False):
     """
@@ -21,6 +22,11 @@ def answer_questions(r, n, answer_mode=False):
     with open("file\\Exercise.txt", 'a', encoding="UTF-8") as fp1, open("file\\Answer.txt", 'a',
                                                                         encoding="UTF-8") as fp2:
         for question_num in range(1, n + 1):  # 生成 n 道题目
+            print("\r", end="")
+            progress = int((question_num / n) * 50)  # 计算进度条长度（50个字符）
+            percentage = (question_num / n) * 100  # 计算百分比
+            print("Download progress: {:.2f}%: ".format(percentage), "▋" * progress + " " * (50 - progress), end="")
+            sys.stdout.flush()
             while True:
                 try:
                     # 生成一个新的问题对象
@@ -70,11 +76,16 @@ def check_answer(exercise_file, answer_file):
     correct_list = []  # 保存正确题目的编号
     wrong_list = []  # 保存错误题目的编号
 
-    # 打开题目和答案文件，逐行读取
+    # 读取题目和答案文件的行数，以便计算总进度
     with open(exercise_file, 'r', encoding="UTF-8") as fp1, open(answer_file, 'r', encoding="UTF-8") as fp2:
+        total_lines = sum(1 for _ in fp1)  # 计算题目行数
+        fp1.seek(0)  # 重置文件指针到开头
+        fp2.seek(0)  # 重置文件指针到开头
+
         counter = 1  # 题目编号计数器
         exe_line = fp1.readline()  # 读取一行题目
         ans_line = fp2.readline()  # 读取一行答案
+
         while exe_line and ans_line:
             # 提取出题目中的表达式部分
             exe_line = exe_line[exe_line.index('. ') + 1:-3]
@@ -92,6 +103,14 @@ def check_answer(exercise_file, answer_file):
             else:
                 wrong_answers += 1  # 错误答案数加 1
                 wrong_list.append(counter)  # 将题号加入错误列表
+
+            # 更新进度条
+            print("\r", end="")
+            progress = int((counter / total_lines) * 50)  # 进度条长度为20个字符
+            percentage = (counter / total_lines) * 100  # 计算百分比
+            print("校对进度: {:.2f}%: ".format(percentage), "▋" * progress + " " * (50 - progress), end="")
+            sys.stdout.flush()
+
             # 读取下一行题目和答案
             exe_line = fp1.readline()
             ans_line = fp2.readline()
