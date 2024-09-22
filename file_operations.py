@@ -32,9 +32,9 @@ def answer_questions(r, n, answer_mode=False):
                 break
 
             # 将生成的题目写入文件中
-            fp1.write(f"({question_num}){question.string_ver} = \n")
+            fp1.write(f"{question_num}. {question.string_ver} = \n")
             # 将答案转换为带分数形式并写入答案文件中
-            fp2.write(f"({question_num}){fraction_to_mixed(question.result)}\n")
+            fp2.write(f"{question_num}. {fraction_to_mixed(question.result)}\n")
 
             # 如果启用了答题模式
             if answer_mode:
@@ -77,9 +77,9 @@ def check_answer(exercise_file, answer_file):
         ans_line = fp2.readline()  # 读取一行答案
         while exe_line and ans_line:
             # 提取出题目中的表达式部分
-            exe_line = exe_line[exe_line.index(')') + 1:-3]
+            exe_line = exe_line[exe_line.index('. ') + 1:-3]
             # 提取出答案部分，并将其转换为 Fraction 类型
-            ans_line = ans_line[ans_line.index(')') + 1:]
+            ans_line = ans_line[ans_line.index('. ') + 1:]
             ans_line = str(mixed_to_fraction(ans_line))
             # 计算题目表达式的正确结果
             result_exe = Fraction(eval(exe_line)).limit_denominator(1024)
